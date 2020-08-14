@@ -1,6 +1,6 @@
 
 
-# 深入 Spring IoC 容器系列 2
+# 深入 Spring IoC 系列 - 2.1: 依赖注入使用
 
 
 
@@ -214,6 +214,194 @@ Spring 在创建容器的时候会校验每个bean的配置.然而,bean自身的
 
 
 ### 依赖注入示例
+
+下面的例子使用了基于 XML 配置元数据来实现基于 setter 的DI, 一个Spring XML 配置文件中的一部分如下:
+
+```xml
+<bean id="exampleBean" class="examples.ExampleBean">
+    <!-- setter injection using the nested ref element -->
+    <property name="beanOne">
+        <ref bean="anotherExampleBean"/>
+    </property>
+
+    <!-- setter injection using the neater ref attribute -->
+    <property name="beanTwo" ref="yetAnotherBean"/>
+    <property name="integerProperty" value="1"/>
+</bean>
+
+<bean id="anotherExampleBean" class="examples.AnotherBean"/>
+<bean id="yetAnotherBean" class="examples.YetAnotherBean"/>
+```
+
+下面的例子展示了相关联的 `ExampleBean` 类:
+
+```java
+public class ExampleBean {
+
+    private AnotherBean beanOne;
+
+    private YetAnotherBean beanTwo;
+
+    private int i;
+
+    public void setBeanOne(AnotherBean beanOne) {
+        this.beanOne = beanOne;
+    }
+
+    public void setBeanTwo(YetAnotherBean beanTwo) {
+        this.beanTwo = beanTwo;
+    }
+
+    public void setIntegerProperty(int i) {
+        this.i = i;
+    }
+}
+```
+
+在前面的例子中,setter 会和 XML 中指定的属性进行匹配.
+
+下面的例子使用基于构造器的DI:
+
+```xml
+<bean id="exampleBean" class="examples.ExampleBean">
+    <!-- constructor injection using the nested ref element -->
+    <constructor-arg>
+        <ref bean="anotherExampleBean"/>
+    </constructor-arg>
+
+    <!-- constructor injection using the neater ref attribute -->
+    <constructor-arg ref="yetAnotherBean"/>
+
+    <constructor-arg type="int" value="1"/>
+</bean>
+
+<bean id="anotherExampleBean" class="examples.AnotherBean"/>
+<bean id="yetAnotherBean" class="examples.YetAnotherBean"/>
+```
+
+下面展示了对应的 `ExampleBean` 类:
+
+```java
+public class ExampleBean {
+
+    private AnotherBean beanOne;
+
+    private YetAnotherBean beanTwo;
+
+    private int i;
+
+    public ExampleBean(
+        AnotherBean anotherBean, YetAnotherBean yetAnotherBean, int i) {
+        this.beanOne = anotherBean;
+        this.beanTwo = yetAnotherBean;
+        this.i = i;
+    }
+}
+```
+
+bean 定义中指定的 `constructor-arg` 在 `ExampleBean` 中作为构造器参数使用.
+
+现在思考一下这个例子的变形,告诉Spring 使用 `static` 工厂方法来返回一个对象的实例:
+
+```xml
+<bean id="exampleBean" class="examples.ExampleBean" factory-method="createInstance">
+    <constructor-arg ref="anotherExampleBean"/>
+    <constructor-arg ref="yetAnotherBean"/>
+    <constructor-arg value="1"/>
+</bean>
+
+<bean id="anotherExampleBean" class="examples.AnotherBean"/>
+<bean id="yetAnotherBean" class="examples.YetAnotherBean"/>
+```
+
+下面展示的是关联的 `ExampleBean` 类:
+
+```java
+public class ExampleBean {
+
+    // a private constructor
+    private ExampleBean(...) {
+        ...
+    }
+
+    // a static factory method; the arguments to this method can be
+    // considered the dependencies of the bean that is returned,
+    // regardless of how those arguments are actually used.
+    public static ExampleBean createInstance (
+        AnotherBean anotherBean, YetAnotherBean yetAnotherBean, int i) {
+
+        ExampleBean eb = new ExampleBean (...);
+        // some other operations...
+        return eb;
+    }
+}
+```
+
+`static` 工厂方法的参数使用的是 `<constructor-arg/>` 元素,和使用构造器的情况是一样的.工厂方法返回的类的类型不一定要是包含这个 `static` 工厂方法的类型(尽管这个例子是这样的).实例(非静态) 工厂方法使用的方式基本是一致的(除了使用 `factory-bean` 属性替代 `class` 属性),所以我们在这里不讨论这些细节.
+
+
+
+## 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
