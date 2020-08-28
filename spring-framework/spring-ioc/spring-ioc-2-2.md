@@ -101,7 +101,53 @@ Spring 容器将会将 `<value/>` 元素里的内容通过JavaBean `PropertyEdit
 
 `ref` 元素是 `<constructor-arg/>` 或者 `<property/>` 中最后的元素. 在这里,你设置一个bean的指定的属性为容器管理的另一个bean(协作者).被引用的bean是设置属性的bean的依赖,并且是在属性被设置之前按需加载.(如果这个协作者是一个单例bean,它可能已经被容器初始化了) 所有的引用最终都是指向另一个对象的引用.作用域和校验取决于你通过 `bean` 还是 `parent` 属性指定了其它对象的ID或者名字.
 
+通过 `bean` 属性中的 `<ref/>` 标记来指定目标bean是最常用的形式,这么做允许创建在同一个容器或者父容器中的bean ,而不管它是否在同一个XML文件中. `bean` 属性中的值可以与目标bean的 `id` 属性的值或者是 `name` 属性的值相同.下面的例子展示了如何使用 `ref` 元素:
 
+```xml
+<ref bean="someBean"/>
+```
+
+通过使用 `parent` 属性来指定一个在当前容器父容器中的目标bean.`parent` 属性的值可以与目标bean的 `id` 或者是 `name` 相同. 目标bean 必须在当前容器的父容器中. 你应该在当你的容器有层级结构的时候,并且当你想指定父容器中与本容器名字相同的bean的时候使用这个元素.如下:
+
+```xml
+<!-- in the parent context -->
+<bean id="accountService" class="com.something.SimpleAccountService">
+    <!-- insert dependencies as required as here -->
+</bean>
+```
+
+```xml
+<!-- in the child (descendant) context -->
+<bean id="accountService" <!-- bean name is the same as the parent bean -->
+    class="org.springframework.aop.framework.ProxyFactoryBean">
+    <property name="target">
+        <ref parent="accountService"/> <!-- notice how we refer to the parent bean -->
+    </property>
+    <!-- insert other configuration and dependencies as required here -->
+</bean>
+```
+
+
+
+### 内部bean
+
+一个`<property/>` 或者 `<constructor-arg/>` 中的 `<bean/>` 元素就是内部bean,如下:
+
+```xml
+<bean id="outer" class="...">
+    <!-- instead of using a reference to a target bean, simply define the target bean inline -->
+    <property name="target">
+        <bean class="com.example.Person"> <!-- this is the inner bean -->
+            <property name="name" value="Fiona Apple"/>
+            <property name="age" value="25"/>
+        </bean>
+    </property>
+</bean>
+```
+
+一个内部bean定义不需要一个 ID 或者 名字. 如果指定了,容器也不会将它作为一个标识符.容器同时会在创建时忽略 `scope` 标识,这是因为内部bean总是匿名的并且总是由外部bean创建. 它不可能被单独访问依赖或者是将他们注入到协作bean中除非是封闭bean.
+
+有一个边界情况,可能会接收到自定义作用域的销毁回调 -- 比如,对于一个单例bean中的 请求作用域 的内部bean.内部bean实例的创建是和包含它的bean绑定在一起的,但是销毁回调使得它参与到了请求作用域的生命周期.这不是一个通常的场景.内部bean通常是和包裹它的bean共享作用域的.
 
 
 
