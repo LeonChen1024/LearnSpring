@@ -1,4 +1,4 @@
-# 深入 Spring IoC - 1.2 Bean 概览
+# 深入 Spring IoC - 3 Bean 概览
 
 
 
