@@ -92,6 +92,34 @@ public class UserPreferences {
 
 ### 应用作用域
 
+思考如下 xml bean 定义
+
+```xml
+<bean id="appPreferences" class="com.something.AppPreferences" scope="application"/>
+```
+
+Spring 容器为整个 web 应用通过该定义创建一个 `AppPreferences` 的实例.也就是说这个`appPreferences` bean 的作用域是整个 `ServletContext` 级别的并且作为一个 `ServletContext` 属性保存.这和单例 bean 类似,但是有两个重要的不同点:它是每个 `ServletContext` 的单例,而不是每个 Spring '应用 Context'(因此在 web 应用中可能会有多个),它实际上是公开的就像 `ServletContext` 的属性一样.
+
+当使用注解驱动的组件或者 Java 配置时,你可以使用 `@ApplicationScope` 注解来将一个组件设置为 `application` 作用域.如下:
+
+```java
+@ApplicationScope
+@Component
+public class AppPreferences {
+    // ...
+}
+```
+
+
+
+### 限定作用域的 bean 作为依赖
+
+Spring IOC 容器管理的不仅仅是对象的实例化,同时还有装载协作者(或者依赖)的作用.如果你想要注入一个 HTTP 请求作用域的 bean 到另一个生命周期更长 bean 中,你可以选择注入一个 AOP 代理这个作用域 bean.也就是说,你需要注入一个代理对象暴露出和作用域 bean相同的public 接口但是它同时还能接收一个相关作用域的真实目标对象并且代理调用方法到真实对象.
+
+
+
+
+
 
 
 
